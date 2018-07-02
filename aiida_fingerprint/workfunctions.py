@@ -21,6 +21,61 @@ from libmatch.utils import ase2qp, get_spkit, get_spkitMax
 StructureData = DataFactory('structure')
 CifData = DataFactory('cif')
 
+from requests import
+from cStringIO import StringIO
+
+
+@workfunctions
+def soap_rest_workfunction(aiida_structure, address, spkitMax, do_anonimization=True,
+                           do_scaling=True, scale_per='site',  nocenters=None,
+                           centerweight=1.0, gaussian_width=0.5, cutoff=3.5,
+                           cutoff_transition_width=0.5, nmax=8, lmax=6,
+                           is_fast_average=False):
+    def anonymize(structure):
+        n_atoms = structure.n
+        structure.set_atomic_numbers([1] * n_atoms)
+        structure.set_chemical_symbols(['H'] * n_atoms)
+        return structure
+
+    def scale(structure, per='site'):
+        if per == 'site':
+            n_atoms = structure.n
+        elif per == 'cell':
+            n_atoms = 1  # scaling volume to 1/cell is the same as having 1 atom
+        else:
+            return ExitCode(400, '{} is not a valid `per` for scaling'.format(per))
+        new_cell = structure.get_cell() / np.cbrt(structure.cell_volume() / n_atoms)
+        structure.set_cell(new_cell)
+        new_pos = structure.get_positions() / \
+            np.linalg.norm(structure.get_cell(), axis=1) * \
+            np.linalg.norm(new_cell, axis=1)
+        structure.set_positions(new_pos)
+        return structure
+
+    ############################################################################
+
+    ase_atoms = aiida_structure.get_ase()
+    if do_anonimization:
+        ase_atoms = anonymize(ase_atoms)
+    if do_scaling:
+        ase_atoms = scale(ase_atoms, per=scale_per)
+
+    fake_file = StringIO()
+    ase_atoms.write(filename=fake_file, format='json')
+    ase_json = fake_file.getvalue()
+    fake_file.close()
+
+    payload = {'atoms': ase_json, 'spkit': spkit, 'spkitMax': spkitMax,
+               'nocenters': nocenters, 'gaussian_width': gaussian_width,
+               'cutoff': cutoff, 'cutoff_transition_width': cutoff_transition_width,
+               'nmax': nmax, 'lmax': lmax, 'is_fast_average': is_fast_average}
+
+    soap_request = requests.get(
+        'https://{}/v1/soap'.format(address), params=payload)
+    soap = soap_request.json()
+
+    return soap
+
 
 @workfunctions
 def soap_workfunction(aiida_structure, spkit_max, do_anonimization=True,
