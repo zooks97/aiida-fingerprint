@@ -12,6 +12,7 @@ from pymatgen import Structure, Lattice
 from pymatgen.io.cif import CifWriter
 from aiida.orm import DataFactory
 from aiida.work.workfunctions import workfunctions
+from aiida.work import ExitCode
 
 path.insert(0, 'GLOSIM2')
 from libmatch.soap import get_soap
@@ -36,8 +37,7 @@ def soap_workfunction(aiida_structure, spkit_max, do_anonimization=True,
         elif per == 'cell':
             n_atoms = 1  # scaling volume to 1/cell is the same as having 1 atom
         else:
-            # raise error here
-            pass
+            return ExitCode(400, '{} is not a valid `per` for scaling'.format(per))
         new_cell = structure.get_cell() / np.cbrt(structure.cell_volume() / n_atoms)
         structure.set_cell(new_cell)
         new_pos = structure.get_positions() / \
@@ -75,8 +75,13 @@ def stidy_workfunction(structure, ang=5, d1=0.55, d2=0.55, d3=0.55):
                                        stdout=PIPE,
                                        stderr=STDOUT,
                                        stdin=PIPE)
-            addsym_shx_process.communicate(
-                input=b'ADDSYM_SHX {} {} {} {}'.format(ang, d1, d2, d3))
+            try:
+                addsym_shx_process.communicate(
+                    input=b'ADDSYM_SHX {} {} {} {}'.format(ang, d1, d2, d3))
+            except TimeoutExpired as t:
+                return ExitCode(408, 'ADDSYM_SHX timed out: {}'.format(t))
+            except Exception as e:
+                return ExitCode(500, 'ADDSYM_SHX crashed: {}'.format(e))
             # call STIDY on the ADDSYM_SHX output
             temp_file_dirname, temp_file_basena dme = path.split(
                 temp_file.name)
@@ -86,11 +91,19 @@ def stidy_workfunction(structure, ang=5, d1=0.55, d2=0.55, d3=0.55):
             temp_file_spf = path.join(
                 temp_file_dirname, temp_file_basename_spf)
 
+            if not os.path.isfile(temp_file_spf):
+                return ExitCode(500, 'ADDSYM_SHX failed to write *_pl.spf file')
+
             stidy_process = Popen(['platon', '-o', temp_file_spf],
                                   stdout=PIPE,
                                   stderr=STDOUT,
                                   stdin=PIPE)
-            stidy_data = stidy_process.communicate(input=b'STIDY')
+            try:
+                stidy_data = stidy_process.communicate(input=b'STIDY')
+            except TimeoutExpired as t:
+                return ExitCode(408, 'STIDY timed out: {}'.format(t))
+            except Exception as e:
+                return Exitcode(500, 'STIDY crashed: {}'.format(e))
         stidy_output = stidy_data[0].decode('utf-8')
 
         # clean up files
@@ -105,13 +118,13 @@ def stidy_workfunction(structure, ang=5, d1=0.55, d2=0.55, d3=0.55):
         space_group = int(match.group(1))
         return space_group
 
-    def get_wyckoffs(stidy_output):
+    def get_wyckoffs(sites):
         wyckoffs = []
-        for site in self.ctx.sites:
+        for site in sites:
             wyckoffs.append(site[1].split('(')[-1].split(')')[0])
         return wyckoffs
 
-    def get_sites(stidy_output:
+    def get_sites(stidy_output):
         regexp = re.compile(
             r'\s+([a-zA-Z]{1,2})(\d)+\s+([\w\(\)]{4,5})\s+([\d\/\.]+)\s+([\d\/\.]+)\s+([\d\/\.]+)\s+(\w+)\s+(\d+)')
         match_blocks = []
@@ -169,7 +182,7 @@ def stidy_workfunction(structure, ang=5, d1=0.55, d2=0.55, d3=0.55):
 
     stidy_output = stidy(structure, ang, d1, d2, d3)
     space_group = get_space_group(stidy_output)
-    wyckoffs = get_wyckoffs(stidy_output)
     sites = get_sites(stidy_output)
+    wyckoffs = get_wyckoffs(sites)
     fingerprint = get_fingerprint(space_group, wyckoffs, sites)
     return space_group, wyckoffs, sites, fingerprint
