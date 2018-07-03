@@ -14,9 +14,9 @@ from aiida.orm import DataFactory
 from aiida.work.workfunctions import workfunctions
 from aiida.work import ExitCode
 
-path.insert(0, 'GLOSIM2')
-from libmatch.soap import get_soap
-from libmatch.utils import ase2qp, get_spkit, get_spkitMax
+# path.insert(0, 'GLOSIM2')
+# from libmatch.soap import get_soap
+# from libmatch.utils import ase2qp, get_spkit, get_spkitMax
 
 StructureData = DataFactory('structure')
 CifData = DataFactory('cif')

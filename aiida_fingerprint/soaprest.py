@@ -2,6 +2,12 @@ import flask
 import flask_restful
 from flask_restful.reqparse import Argument, RequestParser
 
+import ase.io
+
+path.insert(0, '/root/git/glosim2')
+from libmatch.soap import get_soap
+from libmatch.utils import ase2qp, get_spkit, get_spkitMax
+
 app = flask.Flask(__name__)
 api = flask_restful.Api(app)
 VERSION = 1
