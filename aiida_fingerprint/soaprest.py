@@ -1,3 +1,4 @@
+import json
 import flask
 import flask_restful
 from flask_restful.reqparse import Argument, RequestParser
@@ -6,7 +7,7 @@ import ase.io
 
 from sys import path
 path.insert(0, '/root/git/glosim2')
-from libmatch.soap import get_soap
+from libmatch.soap import get_soap, get_Soaps
 from libmatch.utils import ase2qp, get_spkit, get_spkitMax
 
 app = flask.Flask(__name__)
@@ -14,17 +15,17 @@ api = flask_restful.Api(app)
 VERSION = 1
 
 ARGUMENTS = {
-    'atoms': Argument('atoms', type=str, required=True, help='JSON string of quippy atoms object'),
-    'spkit': Argument('spkit', type=dict, required=True, help='Dictionary of atomic numbers and number of occurences for the structure'),
-    'spkitMax': Argument('spkitMax', type=dict, required=True, help='Dictionary of atomic numbers and maximum number of occurences in all structures'),
-    'nocenters': Argument('nocenters', default=None),
-    'centerweight': Argument('centerweight', type=float, default=1.0),
-    'gaussian_width': Argument('gaussian_width', type=float, default=0.5),
-    'cutoff': Argument('cutoff', type=float, default=3.5),
-    'cutoff_transition_width': Argument('cutoff_transition_width', type=float, default=0.5),
-    'nmax': Argument('nmax', type=int, default=8),
-    'lmax': Argument('lmax', type=int, default=6),
-    'is_fast_average': Argument('is_fast_average', type=bool, default=False),
+    'atoms': Argument('atoms', type=str, required=True),
+    'spkitMax': Argument('spkitMax', type=str, required=True),
+    'spkit': Argument('spkit', type=str, default=None, required=False),
+    'nocenters': Argument('nocenters', default=None, required=False),
+    'centerweight': Argument('centerweight', type=float, default=1.0, required=False),
+    'gaussian_width': Argument('gaussian_width', type=float, default=0.5, required=False),
+    'cutoff': Argument('cutoff', type=float, default=3.5, required=False),
+    'cutoff_transition_width': Argument('cutoff_transition_width', type=float, default=0.5, required=False),
+    'nmax': Argument('nmax', type=int, default=8, required=False),
+    'lmax': Argument('lmax', type=int, default=6, required=False),
+    # 'is_fast_average': Argument('is_fast_average', type=bool, default=False, required=False),
 }
 
 
@@ -42,18 +43,25 @@ class FakeFile(object):
 class soapv1(flask_restful.Resource):
     def get(self):
         parser = flask_restful.reqparse.RequestParser()
-        argument_names = ['atoms', 'spkit', 'spkitMax', 'nocenters', 'gaussian_width',
-                          'cutoff', 'cutoff_transition_width', 'nmax', 'lmax', 'is_fast_average']
+        argument_names = ['atoms', 'spkitMax', 'nocenters', 'gaussian_width', 'spkit',
+                          'cutoff', 'cutoff_transition_width', 'nmax', 'lmax']
         for argument_name in argument_names:
             parser.add_argument(ARGUMENTS[argument_name])
         args = parser.parse_args(strict=True)
         args['atoms'] = ase.io.read(FakeFile(args['atoms']), format='json')
+	args['atoms'] = ase2qp(args['atoms'])
+        args['spkitMax'] = json.loads(args['spkitMax'])
+        if not args['spkit']:
+            args['spkit'] = get_spkit(args['atoms'])
+	# args['atoms'] = [args['atoms']]
         soaps = get_soap(**args)
+        # soaps = {key: value.tolist() for key, value in soaps.iteritems()}
+	soaps = soaps.tolist()
 
-        return flask.jsonify(dict(soaps))
+        return flask.jsonify(soaps)
 
 
 api.add_resource(soapv1, '/v{}/soap/'.format(VERSION))
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=8899, host='0.0.0.0')
