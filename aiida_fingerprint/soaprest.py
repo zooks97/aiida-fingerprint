@@ -4,6 +4,7 @@ from flask_restful.reqparse import Argument, RequestParser
 
 import ase.io
 
+from sys import path
 path.insert(0, '/root/git/glosim2')
 from libmatch.soap import get_soap
 from libmatch.utils import ase2qp, get_spkit, get_spkitMax
@@ -34,7 +35,7 @@ class FakeFile(object):
     def seek(self, arg):
         return
 
-    def read(self)
+    def read(self):
         return self.contents
 
 
@@ -52,7 +53,7 @@ class soapv1(flask_restful.Resource):
         return flask.jsonify(dict(soaps))
 
 
-api.add_resource(soapv1, 'v{}/soap/'.format(VERSION))
+api.add_resource(soapv1, '/v{}/soap/'.format(VERSION))
 
 if __name__ == '__main__':
     app.run(debug=True)
