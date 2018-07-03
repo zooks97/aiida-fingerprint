@@ -53,3 +53,6 @@ class soapv1(flask_restful.Resource):
 
 
 api.add_resource(soapv1, 'v{}/soap/'.format(VERSION))
+
+if __name__ == '__main__':
+    app.run(debug=True)
