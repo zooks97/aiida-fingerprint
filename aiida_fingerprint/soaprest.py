@@ -64,10 +64,10 @@ class get_Soaps_v1(flask_restful.Resource):
         for argument_name in argument_names:
             parser.add_argument(ARGUMENTS[argument_name])
         args = parser.parse_args(strict=True)
-        args['atoms'] = [atoms_utils.from_dict(atoms) for atoms in atoms_utils.loads(args['atoms'])]
+        args['atoms'] = [atoms_utils.from_dict(atoms) for atoms in json.loads(args['atoms'])]
         args['atoms'] = [ase2qp(atom) for atom in args['atoms']]
         soaps = get_Soaps(**args)
-        soaps = {key: value.tolist() for key, value in soaps.iteritems()}
+        soaps = [{key: value.tolist() for key, value in soap.iteritems()} for soap in soaps]
 
         return flask.jsonify(soaps)
 
