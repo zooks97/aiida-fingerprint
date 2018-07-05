@@ -3,6 +3,7 @@
 import json
 import flask
 import flask_restful
+import atoms_utils
 from flask_restful.reqparse import Argument, RequestParser
 
 import ase.io
@@ -31,17 +32,6 @@ ARGUMENTS = {
 }
 
 
-class FakeFile(object):
-    def __init__(self, contents):
-        self.contents = contents
-
-    def seek(self, arg):
-        return
-
-    def read(self):
-        return self.contents
-
-
 class get_soap_v1(flask_restful.Resource):
     def get(self):
         parser = flask_restful.reqparse.RequestParser()
@@ -50,7 +40,7 @@ class get_soap_v1(flask_restful.Resource):
         for argument_name in argument_names:
             parser.add_argument(ARGUMENTS[argument_name])
         args = parser.parse_args(strict=True)
-        args['atoms'] = ase.io.read(FakeFile(args['atoms']), format='json')
+        args['atoms'] = atoms_utils.loads(args['atoms'])
         args['atoms'] = ase2qp(args['atoms'])
         args['spkitMax'] = json.loads(args['spkitMax'])
         if not args['spkit']:
@@ -74,18 +64,10 @@ class get_Soaps_v1(flask_restful.Resource):
         for argument_name in argument_names:
             parser.add_argument(ARGUMENTS[argument_name])
         args = parser.parse_args(strict=True)
-        print(args['atoms'][0])
-        print(ase.io.read(FakeFile(args['atoms'][0]), format='json'))
-        args['atoms'] = [ase.io.read(FakeFile(atom), format='json')
-                         for atom in args['atoms']]
+        args['atoms'] = [atoms_utils.from_dict(atoms) for atoms in atoms_utils.loads(args['atoms'])]
         args['atoms'] = [ase2qp(atom) for atom in args['atoms']]
-        # args['spkitMax'] = json.loads(args['spkitMax'])
-        # if not args['spkit']:
-        #     args['spkit'] = get_spkit(args['atoms'])
         soaps = get_Soaps(**args)
-        print(soaps)
         soaps = {key: value.tolist() for key, value in soaps.iteritems()}
-        # soaps = soaps.tolist()
 
         return flask.jsonify(soaps)
 
