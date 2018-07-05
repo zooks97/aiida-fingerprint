@@ -42,7 +42,7 @@ class FakeFile(object):
         return self.contents
 
 
-class soapv1(flask_restful.Resource):
+class get_soap_v1(flask_restful.Resource):
     def get(self):
         parser = flask_restful.reqparse.RequestParser()
         argument_names = ['atoms', 'spkitMax', 'nocenters', 'gaussian_width', 'spkit',
@@ -63,7 +63,33 @@ class soapv1(flask_restful.Resource):
         return flask.jsonify(soaps)
 
 
-api.add_resource(soapv1, '/v{}/get_soap/'.format(VERSION))
+api.add_resource(get_soap_v1, '/v{}/get_soap/'.format(VERSION))
+
+
+class get_Soaps_v1(flask_restful.Resource):
+    def get(self):
+        parser = flask_restful.reqparse.RequestParser()
+        argument_names = ['atoms', 'nocenters', 'gaussian_width',
+                          'cutoff', 'cutoff_transition_width', 'nmax', 'lmax']
+        for argument_name in argument_names:
+            parser.add_argument(ARGUMENTS[argument_name])
+        args = parser.parse_args(strict=True)
+	print(args['atoms'][0])
+	print(ase.io.read(FakeFile(args['atoms'][0]), format='json'))
+        args['atoms'] = [ase.io.read(FakeFile(atom), format='json') for atom in args['atoms']]
+        args['atoms'] = [ase2qp(atom) for atom in args['atoms']]
+        # args['spkitMax'] = json.loads(args['spkitMax'])
+        # if not args['spkit']:
+        #     args['spkit'] = get_spkit(args['atoms'])
+        soaps = get_Soaps(**args)
+        print(soaps)
+        soaps = {key: value.tolist() for key, value in soaps.iteritems()}
+        # soaps = soaps.tolist()
+
+        return flask.jsonify(soaps)
+
+
+api.add_resource(get_Soaps_v1, '/v{}/get_Soaps/'.format(VERSION))
 
 if __name__ == '__main__':
     app.run(debug=True, port=8899, host='0.0.0.0')
