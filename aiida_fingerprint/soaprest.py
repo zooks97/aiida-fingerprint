@@ -74,9 +74,10 @@ class get_Soaps_v1(flask_restful.Resource):
         for argument_name in argument_names:
             parser.add_argument(ARGUMENTS[argument_name])
         args = parser.parse_args(strict=True)
-	print(args['atoms'][0])
-	print(ase.io.read(FakeFile(args['atoms'][0]), format='json'))
-        args['atoms'] = [ase.io.read(FakeFile(atom), format='json') for atom in args['atoms']]
+        print(args['atoms'][0])
+        print(ase.io.read(FakeFile(args['atoms'][0]), format='json'))
+        args['atoms'] = [ase.io.read(FakeFile(atom), format='json')
+                         for atom in args['atoms']]
         args['atoms'] = [ase2qp(atom) for atom in args['atoms']]
         # args['spkitMax'] = json.loads(args['spkitMax'])
         # if not args['spkit']:
