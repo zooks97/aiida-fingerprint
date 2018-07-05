@@ -63,7 +63,7 @@ class soapv1(flask_restful.Resource):
         return flask.jsonify(soaps)
 
 
-api.add_resource(soapv1, '/v{}/get_Soaps/'.format(VERSION))
+api.add_resource(soapv1, '/v{}/get_soap/'.format(VERSION))
 
 if __name__ == '__main__':
     app.run(debug=True, port=8899, host='0.0.0.0')
