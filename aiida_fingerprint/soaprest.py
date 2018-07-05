@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+# python 2.7
 import json
 import flask
 import flask_restful
@@ -49,19 +51,19 @@ class soapv1(flask_restful.Resource):
             parser.add_argument(ARGUMENTS[argument_name])
         args = parser.parse_args(strict=True)
         args['atoms'] = ase.io.read(FakeFile(args['atoms']), format='json')
-	args['atoms'] = ase2qp(args['atoms'])
+        args['atoms'] = ase2qp(args['atoms'])
         args['spkitMax'] = json.loads(args['spkitMax'])
         if not args['spkit']:
             args['spkit'] = get_spkit(args['atoms'])
-	# args['atoms'] = [args['atoms']]
+        # args['atoms'] = [args['atoms']]
         soaps = get_soap(**args)
         # soaps = {key: value.tolist() for key, value in soaps.iteritems()}
-	soaps = soaps.tolist()
+        soaps = soaps.tolist()
 
         return flask.jsonify(soaps)
 
 
-api.add_resource(soapv1, '/v{}/soap/'.format(VERSION))
+api.add_resource(soapv1, '/v{}/get_Soaps/'.format(VERSION))
 
 if __name__ == '__main__':
     app.run(debug=True, port=8899, host='0.0.0.0')

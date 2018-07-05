@@ -11,7 +11,7 @@ from subprocess import Popen, PIPE, STDOUT
 from pymatgen import Structure, Lattice
 from pymatgen.io.cif import CifWriter
 from aiida.orm import DataFactory
-from aiida.work.workfunctions import workfunctions
+from aiida.work.workfunctions import workfunction
 from aiida.work import ExitCode
 
 # path.insert(0, 'GLOSIM2')
@@ -21,11 +21,11 @@ from aiida.work import ExitCode
 StructureData = DataFactory('structure')
 CifData = DataFactory('cif')
 
-from requests import
+import requests
 from cStringIO import StringIO
 
 
-@workfunctions
+@workfunction
 def soap_rest_workfunction(aiida_structure, address, spkitMax, do_anonimization=True,
                            do_scaling=True, scale_per='site',  nocenters=None,
                            centerweight=1.0, gaussian_width=0.5, cutoff=3.5,
@@ -65,19 +65,19 @@ def soap_rest_workfunction(aiida_structure, address, spkitMax, do_anonimization=
     ase_json = fake_file.getvalue()
     fake_file.close()
 
-    payload = {'atoms': ase_json, 'spkit': spkit, 'spkitMax': spkitMax,
+    payload = {'atoms': ase_json, 'spkitMax': spkitMax,
                'nocenters': nocenters, 'gaussian_width': gaussian_width,
                'cutoff': cutoff, 'cutoff_transition_width': cutoff_transition_width,
                'nmax': nmax, 'lmax': lmax, 'is_fast_average': is_fast_average}
 
     soap_request = requests.get(
-        'https://{}/v1/soap'.format(address), params=payload)
+        '{}/v1/soap'.format(address), params=payload)
     soap = soap_request.json()
 
     return soap
 
 
-@workfunctions
+@workfunction
 def soap_workfunction(aiida_structure, spkit_max, do_anonimization=True,
                       do_scaling=True, scale_per='site', **soapargs):
     def anonymize(structure):
@@ -138,7 +138,7 @@ def stidy_workfunction(structure, ang=5, d1=0.55, d2=0.55, d3=0.55):
             except Exception as e:
                 return ExitCode(500, 'ADDSYM_SHX crashed: {}'.format(e))
             # call STIDY on the ADDSYM_SHX output
-            temp_file_dirname, temp_file_basena dme = path.split(
+            temp_file_dirname, temp_file_basename = path.split(
                 temp_file.name)
             temp_file_basename_extless, _ = path.splitext(
                 temp_file_basename)
