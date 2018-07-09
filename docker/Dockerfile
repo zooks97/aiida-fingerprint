@@ -93,6 +93,7 @@ ENV HOME /home/app
 #######################
 ### SOAP REST Setup ###
 #######################
+RUN ls
 RUN git clone https://github.com/cosmo-epfl/glosim2
 RUN git clone https://github.com/zooks97/aiida-fingerprint
 RUN mkdir webservice
