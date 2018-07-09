@@ -49,6 +49,7 @@ RUN apt-get update && \
 ##############
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir \
+    ipython \
     numpy \
     scipy \
     pandas \
@@ -96,6 +97,7 @@ RUN git clone https://github.com/cosmo-epfl/glosim2
 RUN git clone https://github.com/zooks97/aiida-fingerprint
 RUN mkdir webservice
 RUN cp aiida-fingerprint/aiida_fingerprint/soaprest.py webservice/soaprest.py
+RUN cp aiida-fingerprint/aiida_fingerprint/atoms_utils.py webservice/atoms_utils.py
 
 # #############
 # ### Nginx ###
@@ -118,15 +120,18 @@ RUN echo "import sys" > $SP_WSGI_FILE && \
 ### root user ###
 #################
 USER root
+WORKDIR /home/app
 
 ##############
 ### Apache ###
 ##############
-ADD aiida-fingerprint/docker/conf/soaprest-apache.conf /etc/apache2/sites-available/soaprest.conf
+RUN cp /home/app/aiida-fingerprint/docker/conf/soaprest-apache.conf /etc/apache2/sites-available/soaprest.conf
 RUN a2enmod wsgi && a2enmod xsendfile && \
     a2dissite 000-default && a2ensite soaprest
 RUN mkdir /etc/service/apache
-ADD aiida-fingerprint/docker/conf/apache_run.sh /etc/service/apache/run
+RUN cp /home/app/aiida-fingerprint/docker/conf/apache_run.sh /etc/service/apache/run
+RUN chmod +x /etc/service/apache/run
+RUN echo "ServerName localhost:80" >> /etc/apache2/apache2.conf
 
 # #############
 # ### Nginx ###
