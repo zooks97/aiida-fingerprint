@@ -16,9 +16,9 @@ CMD ["/sbin/my_init"]
 # buildessentials and git
 RUN /pd_build/utilities.sh \
     # python 2.7 and 3.5.x
-    && /pd_build/python.sh \
-    # enable Nginx and passenger
-    && rm -f /etc/service/ngnix/down
+    && /pd_build/python.sh
+# # enable Nginx in passenger
+# && rm -f /etc/service/ngnix/down
 
 ########################
 ### Root environment ###
@@ -38,6 +38,9 @@ RUN apt-get update && \
     libnetcdf-dev \
     netcdf-bin \
     curl \
+    apache2 \
+    libapache2-mod-xsendfile \
+    libapache2-mod-wsgi \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean all
 
@@ -94,26 +97,42 @@ RUN git clone https://github.com/zooks97/aiida-fingerprint
 RUN mkdir webservice
 RUN cp aiida-fingerprint/aiida_fingerprint/soaprest.py webservice/soaprest.py
 
-#############
-### Nginx ###
-#############
-RUN mkdir webservice/public
-ENV SP_WSGI_FILE=webservice/soaprest_nginx.py
-RUN echo "import sys" > $SP_WSGI_FILE \
-    && echo "sys.path.insert(0, '/home/app/webservice')" >> $SP_WSGI_FILE \ 
-    && echo "from soaprest import app as application" >> $SP_WSGI_FILE 
+# #############
+# ### Nginx ###
+# #############
+# RUN mkdir webservice/public
+# ENV SP_WSGI_FILE=webservice/soaprest_nginx.py
+# RUN echo "import sys" > $SP_WSGI_FILE \
+#     && echo "sys.path.insert(0, '/home/app/webservice')" >> $SP_WSGI_FILE \ 
+#     && echo "from soaprest import app as application" >> $SP_WSGI_FILE 
+
+##############
+### Apache ###
+##############
+ENV SP_WSGI_FILE=webservice/soaprest_app.wsgi
+RUN echo "import sys" > $SP_WSGI_FILE && \
+    echo "sys.path.insert(0, '/home/app/webservice')" >> $SP_WSGI_FILE && \
+    echo "from soaprest import app as application" >> $SP_WSGI_FILE 
 
 #################
 ### root user ###
 #################
 USER root
-WORKDIR /root
 
-#############
-### Nginx ###
-#############
-RUN rm /etc/nginx/sites-enabled/default
-ADD conf/soaprest-nginx.conf /etc/nginx/sites-enabled/soaprest.conf
+##############
+### Apache ###
+##############
+ADD aiida-fingerprint/docker/conf/soaprest-apache.conf /etc/apache2/sites-available/soaprest.conf
+RUN a2enmod wsgi && a2enmod xsendfile && \
+    a2dissite 000-default && a2ensite soaprest
+RUN mkdir /etc/service/apache
+ADD aiida-fingerprint/docker/conf/apache_run.sh /etc/service/apache/run
+
+# #############
+# ### Nginx ###
+# #############
+# RUN rm /etc/nginx/sites-enabled/default
+# ADD conf/soaprest-nginx.conf /etc/nginx/sites-enabled/soaprest.conf
 
 ############
 ### init ###
@@ -125,3 +144,8 @@ RUN mkdir -p /etc/my_init.d
 ###############
 # webserver
 EXPOSE 80
+
+###############
+### Cleanup ###
+###############
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
