@@ -19,7 +19,7 @@ VERSION = 1
 
 ARGUMENTS = {
     'atoms': Argument('atoms', type=str, required=True),
-    'spkitMax': Argument('spkitMax', type=str, required=True),
+    'spkitMax': Argument('spkitMax', type=str, required=False, default=None),
     'spkit': Argument('spkit', type=str, default=None, required=False),
     'nocenters': Argument('nocenters', default=None, required=False),
     'centerweight': Argument('centerweight', type=float, default=1.0, required=False),
