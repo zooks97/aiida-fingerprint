@@ -1,4 +1,5 @@
 # specific version for reproducibilty
+
 FROM phusion/passenger-customizable:0.9.19
 
 LABEL maintainer Austin Zadoks <austin.zadoks@epfl.ch>
@@ -69,8 +70,12 @@ RUN git clone https://github.com/libAtoms/QUIP.git ${QUIP_ROOT}
 WORKDIR ${QUIP_ROOT}
 # for reproducibility 05-07-2018
 RUN git checkout 531330f
-# don't install GAP
-ENV BUILD NOGAP
+# add GAP files
+ADD ./GAP.tar.gz ./src/
+# RUN rm -rf GAP-filler/
+# do install GAP (necessary for descriptors in quippy)
+ENV BUILD GAP
+ADD . ${QUIP_ROOT}
 # QUIP for general use is the OpenMP version.
 # Installs with no suffix, e.g. quip
 # Also installs quippy
@@ -93,7 +98,7 @@ ENV HOME /home/app
 #######################
 ### SOAP REST Setup ###
 #######################
-RUN ls
+RUN echo "a"
 RUN git clone https://github.com/cosmo-epfl/glosim2
 RUN git clone https://github.com/zooks97/aiida-fingerprint
 RUN mkdir webservice
@@ -126,13 +131,13 @@ WORKDIR /home/app
 ##############
 ### Apache ###
 ##############
-RUN cp /home/app/aiida-fingerprint/docker/conf/soaprest-apache.conf /etc/apache2/sites-available/soaprest.conf
+RUN cp aiida-fingerprint/docker/conf/soaprest-apache.conf /etc/apache2/sites-available/soaprest.conf
 RUN a2enmod wsgi && a2enmod xsendfile && \
     a2dissite 000-default && a2ensite soaprest
-RUN mkdir /etc/service/apache
-RUN cp /home/app/aiida-fingerprint/docker/conf/apache_run.sh /etc/service/apache/run
-RUN chmod +x /etc/service/apache/run
-RUN echo "ServerName localhost:80" >> /etc/apache2/apache2.conf
+# RUN mkdir /etc/service/apache
+# RUN cp /home/app/aiida-fingerprint/docker/conf/apache_run.sh /etc/service/apache/run
+# RUN chmod +x /etc/service/apache/run
+# RUN echo "ServerName localhost:80" >> /etc/apache2/apache2.conf
 
 # #############
 # ### Nginx ###
