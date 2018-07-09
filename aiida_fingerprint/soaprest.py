@@ -28,7 +28,9 @@ ARGUMENTS = {
     'cutoff_transition_width': Argument('cutoff_transition_width', type=float, default=0.5, required=False),
     'nmax': Argument('nmax', type=int, default=8, required=False),
     'lmax': Argument('lmax', type=int, default=6, required=False),
-    # 'is_fast_average': Argument('is_fast_average', type=bool, default=False, required=False),
+    'is_fast_average': Argument('is_fast_average', type=bool, default=False, required=False),
+    'chem_channels': Argument('chem_channels', type=bool, default=False, required=False),
+    'chemicalProjection': Argument('chemicalProjection', default=None, required=False)
 }
 
 
@@ -59,8 +61,10 @@ api.add_resource(get_soap_v1, '/v{}/get_soap/'.format(VERSION))
 class get_Soaps_v1(flask_restful.Resource):
     def get(self):
         parser = flask_restful.reqparse.RequestParser()
-        argument_names = ['atoms', 'nocenters', 'gaussian_width',
-                          'cutoff', 'cutoff_transition_width', 'nmax', 'lmax']
+        argument_names = ['atoms', 'nocenters', 'chem_channels', 'centerweight',
+                          'gaussian_width', 'spkitMax', 'chemicalProjection',
+                          'is_fast_average', 'cutoff', 'cutoff_transition_width',
+                          'nmax', 'lmax']
         for argument_name in argument_names:
             parser.add_argument(ARGUMENTS[argument_name])
         args = parser.parse_args(strict=True)
