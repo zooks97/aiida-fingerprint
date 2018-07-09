@@ -33,7 +33,6 @@ ARGUMENTS = {
     'chemicalProjection': Argument('chemicalProjection', default=None, required=False)
 }
 
-
 class get_soap_v1(flask_restful.Resource):
     def get(self):
         parser = flask_restful.reqparse.RequestParser()
@@ -68,6 +67,9 @@ class get_Soaps_v1(flask_restful.Resource):
         for argument_name in argument_names:
             parser.add_argument(ARGUMENTS[argument_name])
         args = parser.parse_args(strict=True)
+        if args['spkitMax']:
+            args['spkitMax'] = json.loads(args['spkitMax'])
+        args['atoms'] = json.loads(args['atoms'])
         args['atoms'] = [atoms_utils.loads(atoms) for atoms in args['atoms']]
         args['atoms'] = [ase2qp(atoms) for atoms in args['atoms']]
         soaps = get_Soaps(**args)
