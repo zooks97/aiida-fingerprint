@@ -9,7 +9,7 @@ from flask_restful.reqparse import Argument, RequestParser
 import ase.io
 
 from sys import path
-path.insert(0, '/root/glosim2')
+path.insert(0, '/home/app/glosim2')
 from libmatch.soap import get_soap, get_Soaps
 from libmatch.utils import ase2qp, get_spkit, get_spkitMax
 
