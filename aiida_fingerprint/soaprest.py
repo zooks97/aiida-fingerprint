@@ -76,5 +76,13 @@ class get_Soaps_v1(flask_restful.Resource):
 
 api.add_resource(get_Soaps_v1, '/v{}/get_Soaps/'.format(VERSION))
 
+
+class debug_page(flask_restful.Resource):
+    def get(self):
+        return flask.jsonify("Success")
+
+
+api.add_resource(debug_page, '/')
+
 if __name__ == '__main__':
     app.run(debug=True, port=80, host='0.0.0.0')
