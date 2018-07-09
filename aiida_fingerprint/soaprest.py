@@ -77,4 +77,4 @@ class get_Soaps_v1(flask_restful.Resource):
 api.add_resource(get_Soaps_v1, '/v{}/get_Soaps/'.format(VERSION))
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5005, host='0.0.0.0')
+    app.run(debug=True, port=80, host='0.0.0.0')
