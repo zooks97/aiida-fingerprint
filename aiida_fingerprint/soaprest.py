@@ -28,7 +28,7 @@ ARGUMENTS = {
     'cutoff_transition_width': Argument('cutoff_transition_width', type=float, default=0.5, required=False),
     'nmax': Argument('nmax', type=int, default=8, required=False),
     'lmax': Argument('lmax', type=int, default=6, required=False),
-    'is_fast_average': Argument('is_fast_average', type=bool, default=False, required=False),
+    'is_fast_average': Argument('is_fast_average', type=bool, default=None, required=False),
     'chem_channels': Argument('chem_channels', type=bool, default=False, required=False),
     'chemicalProjection': Argument('chemicalProjection', default=None, required=False)
 }
