@@ -24,6 +24,10 @@ MANIFEST
 *.log
 *.json
 *.big
+*.tar.gz
+
+# mac shit
+.DS_Store
 
 # Sphinx documentation
 docs/_build/
