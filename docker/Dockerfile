@@ -66,7 +66,7 @@ RUN pip install --no-cache-dir \
 #####################
 ENV QUIP_ROOT /opt/QUIP_ROOT
 # get QUIP
-RUN git clone https://github.com/libAtoms/QUIP.git ${QUIP_ROOT}
+RUN git clone --recursive https://github.com/libAtoms/QUIP.git ${QUIP_ROOT}
 WORKDIR ${QUIP_ROOT}
 # for reproducibility 05-07-2018
 RUN git checkout 531330f
@@ -98,7 +98,7 @@ ENV HOME /home/app
 #######################
 ### SOAP REST Setup ###
 #######################
-RUN echo "a"
+RUN echo "b"
 RUN git clone https://github.com/cosmo-epfl/glosim2
 RUN git clone https://github.com/zooks97/aiida-fingerprint
 RUN mkdir webservice
